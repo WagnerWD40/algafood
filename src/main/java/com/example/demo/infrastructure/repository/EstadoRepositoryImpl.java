@@ -10,6 +10,7 @@ import javax.transaction.Transactional;
 import com.example.demo.domain.model.Estado;
 import com.example.demo.domain.repository.EstadoRepository;
 
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -38,8 +39,12 @@ public class EstadoRepositoryImpl implements EstadoRepository {
 
     @Transactional
     @Override
-    public void remover(Estado estado) {
-        estado = buscar(estado.getId());
+    public void remover(Long estadoId) {
+        Estado estado = buscar(estadoId);
+
+        if (estado == null) {
+            throw new EmptyResultDataAccessException(1);
+        }
         manager.remove(estado);
     }
     

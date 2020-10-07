@@ -10,6 +10,9 @@ import javax.transaction.Transactional;
 import com.example.demo.domain.model.Restaurante;
 import com.example.demo.domain.repository.RestauranteRepository;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class RestauranteRepositoryImpl implements RestauranteRepository {
 
     @PersistenceContext
@@ -36,8 +39,8 @@ public class RestauranteRepositoryImpl implements RestauranteRepository {
 
     @Transactional
     @Override
-    public void remover(Restaurante restaurante) {
-        restaurante = buscar(restaurante.getId());
+    public void remover(Long restauranteId) {
+        Restaurante restaurante = buscar(restauranteId);
         manager.remove(restaurante);
 
     }

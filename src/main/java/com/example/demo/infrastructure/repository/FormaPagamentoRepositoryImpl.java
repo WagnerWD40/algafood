@@ -10,6 +10,9 @@ import javax.transaction.Transactional;
 import com.example.demo.domain.model.FormaPagamento;
 import com.example.demo.domain.repository.FormaPagamentroRepository;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class FormaPagamentoRepositoryImpl implements FormaPagamentroRepository {
 
     @PersistenceContext

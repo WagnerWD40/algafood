@@ -10,6 +10,9 @@ import javax.transaction.Transactional;
 import com.example.demo.domain.model.Permissao;
 import com.example.demo.domain.repository.PermissaoRepository;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class PermissaoRepositoryImpl implements PermissaoRepository {
 
     @PersistenceContext
