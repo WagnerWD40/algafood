@@ -3,8 +3,9 @@ package com.example.demo.domain.service;
 import com.example.demo.domain.exception.EntidadeEmUsoException;
 import com.example.demo.domain.exception.EntidadeNaoEncontradaException;
 import com.example.demo.domain.model.Cidade;
+import com.example.demo.domain.model.Estado;
 import com.example.demo.domain.repository.CidadeRepository;
-import com.example.demo.domain.repository.CozinhaRepository;
+import com.example.demo.domain.repository.EstadoRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -17,15 +18,27 @@ public class CadastroCidadeService {
     @Autowired
     private CidadeRepository cidadeRepository;
 
+    @Autowired
+    private EstadoRepository estadoRepository;
+
     public Cidade salvar(Cidade cidade) {
-        return cidadeRepository.salvar(cidade);
+        Long estadoId = cidade.getEstado().getId();
+
+        Estado estado = estadoRepository.findById(estadoId)
+                .orElseThrow(() -> new EntidadeNaoEncontradaException(
+                    String.format("Não existe cadastro de estado com código %d", estadoId)
+                ));
+        
+        cidade.setEstado(estado);
+
+        return cidadeRepository.save(cidade);
     }
 
     public void excluir(Long cidadeId) {
 
         try {
 
-            cidadeRepository.remover(cidadeId);
+            cidadeRepository.deleteById(cidadeId);
 
         } catch (EmptyResultDataAccessException e) {
             throw new EntidadeNaoEncontradaException(

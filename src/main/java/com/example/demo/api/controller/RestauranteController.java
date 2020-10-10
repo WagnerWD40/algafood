@@ -1,17 +1,16 @@
 package com.example.demo.api.controller;
 
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.example.demo.domain.exception.EntidadeNaoEncontradaException;
-import com.example.demo.domain.model.Cozinha;
 import com.example.demo.domain.model.Restaurante;
-import com.example.demo.domain.repository.CozinhaRepository;
 import com.example.demo.domain.repository.RestauranteRepository;
 import com.example.demo.domain.service.CadastroRestauranteService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +26,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -38,25 +36,44 @@ public class RestauranteController {
     private RestauranteRepository restauranteRepository;
 
     @Autowired
-    private CozinhaRepository cozinhaRepository;
-
-    @Autowired
     private CadastroRestauranteService cadastroRestauranteService;
 
     @GetMapping
     public List<Restaurante> listar() {
-        return restauranteRepository.listar();
+       return restauranteRepository.findAll();
+    }
+
+    @GetMapping("/exemplo-criteria-query")
+    public List<Restaurante> listarComCriteriaQuery(String nome, BigDecimal taxaFreteInicial, BigDecimal taxaFreteFinal) {
+       return restauranteRepository.findWithCriteriaQuery(nome, taxaFreteInicial, taxaFreteFinal);
     }
 
     @GetMapping("/{restauranteId}")
     public ResponseEntity<Restaurante> buscar(@PathVariable Long restauranteId) {
-        Restaurante restaurante = restauranteRepository.buscar(restauranteId);
+        Optional<Restaurante> restaurante = restauranteRepository.findById(restauranteId);
 
-        if (restaurante != null) {
-            return ResponseEntity.ok(restaurante);
+        if (restaurante.isPresent()) {
+            return ResponseEntity.ok(restaurante.get());
         }
 
         return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/lista-por-nome-e-frete")
+    public List<Restaurante> buscarPorNomeEFrete(String nome, BigDecimal taxaFreteInicial, BigDecimal taxaFreteFinal) {
+        return restauranteRepository.find(nome, taxaFreteInicial, taxaFreteFinal);
+    }
+
+    // exemplo utilizando Specifications p query
+    @GetMapping("/com-frete-gratis")
+    public List<Restaurante> restaurantesComFreteGratis(String nome) {
+        return restauranteRepository.findComFreteGratis(nome);
+    }
+
+    // exemplo usando repositorio customizado
+    @GetMapping("/buscar-primeiro")
+    public Optional<Restaurante> buscarPrimeiro() {
+        return restauranteRepository.buscarPrimeiro();
     }
 
     @PostMapping
@@ -75,12 +92,12 @@ public class RestauranteController {
     public ResponseEntity<?> atualizar(@PathVariable Long restauranteId, @RequestBody Restaurante restaurante) {
         
         try {
-            Restaurante restauranteAtual = restauranteRepository.buscar(restauranteId);
+            Optional<Restaurante> restauranteAtual = restauranteRepository.findById(restauranteId);
 
-            if (restauranteAtual != null) {
-                BeanUtils.copyProperties(restaurante, restauranteAtual, "id");
+            if (restauranteAtual.isPresent()) {
+                BeanUtils.copyProperties(restaurante, restauranteAtual.get(), "id");
     
-                cadastroRestauranteService.salvar(restauranteAtual);
+                cadastroRestauranteService.salvar(restauranteAtual.get());
     
                 return ResponseEntity.ok(restauranteAtual);
             }
@@ -103,18 +120,17 @@ public class RestauranteController {
         }
     }
 
-
     @PatchMapping("/{restauranteId}")
     public ResponseEntity<?> atualizarParcial(@PathVariable Long restauranteId, @RequestBody Map<String, Object> campos) {
-        Restaurante restauranteAtual = restauranteRepository.buscar(restauranteId)        ;
+        Optional<Restaurante> restauranteAtual = restauranteRepository.findById(restauranteId)        ;
 
-        if (restauranteAtual == null) {
+        if (restauranteAtual.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        merge(campos, restauranteAtual);
+        merge(campos, restauranteAtual.get());
         
-        return atualizar(restauranteId, restauranteAtual);
+        return atualizar(restauranteId, restauranteAtual.get());
     }
     
     private void merge(Map<String, Object> camposOrigem, Restaurante restauranteDestino) {
